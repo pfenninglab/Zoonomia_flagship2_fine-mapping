@@ -1,0 +1,7 @@
+*.txt
+*.log
+*.logs
+data/*
+*.parquet
+*.gz
+
