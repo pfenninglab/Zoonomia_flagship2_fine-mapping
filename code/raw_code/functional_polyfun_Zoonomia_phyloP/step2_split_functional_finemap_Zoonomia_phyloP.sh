@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH --partition=pfen_bigmem
+#SBATCH --partition=gpu
 #SBATCH --time 2:00:00
 #SBATCH --job-name=split_jobs
 #SBATCH --mem=10G
-#SBATCH --error=logs/polyfun_funct_LF2.2.UKB_%A_%a.txt
-#SBATCH --output=logs/polyfun_funct_LF2.2.UKB_%A_%a.txt
+#SBATCH --error=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
+#SBATCH --output=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
 #SBATCH --array=1-24
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
-DATADIR=${SETWD}/data/raw_data/functional_polyfun_baseline-LF2.2.UKB
-CODEDIR=${SETWD}/code/raw_code/functional_polyfun_baseline-LF2.2.UKB
+DATADIR=${SETWD}/data/raw_data/functional_polyfun_Zoonomia_phyloP
+CODEDIR=${SETWD}/code/raw_code/functional_polyfun_Zoonomia_phyloP
 POLYFUNDIR='/home/bnphan/src/polyfun'
 
 cd $CODEDIR; source activate polyfun
@@ -36,7 +36,7 @@ SUMSTATS=${DATADIR}/${PREFIX}/snpvars/${PREFIX}.${CHR}.snpvar_constrained.gz
 if [ ! -f ${OUTDIR}/polyfun_all_jobs_${CHR}.txt ]; then
 echo "Working on chr${CHR}."
 python ${POLYFUNDIR}/create_finemapper_jobs.py \
---non-funct --allow-missing --method susie \
+--allow-missing --method susie \
 --cache-dir ${CACHEDIR} --sumstats ${SUMSTATS} \
 --pvalue-cutoff ${CUTOFF} --max-num-causal 10 \
 --out-prefix ${OUTDIR}/polyfun_all --n ${N} \

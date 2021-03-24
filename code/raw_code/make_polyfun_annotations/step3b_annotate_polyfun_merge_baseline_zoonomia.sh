@@ -13,8 +13,8 @@ conda activate polyfun
 LABEL=merged_baselineLF_200m_conservation
 for CHR in {1..22}; do
 ANNOTFILE=${ANNOTDIR}/${LABEL}.${CHR}.annot.parquet
-PARQUET=${ANNOTDIR}/200m_scoresPhyloP_20210214_HAR_20210304.${CHR}.annot.parquet,${GWASDIR}/polyfun/baselineLF2.2.UKB/baselineLF2.2.UKB.${CHR}.annot.parquet
-if [[ ! -f $ANNOTFILE ]]; then python $POLYFUNDIR/merge_annot_polyfun.py --parquet-in ${PARQUET} --annot-file ${ANNOTFILE}
+PARQUET=${ANNOTDIR}/Zoonomia_conservation.${CHR}.annot.parquet,${GWASDIR}/polyfun/baselineLF2.2.UKB/baselineLF2.2.UKB.${CHR}.annot.parquet
+if [[ ! -f $ANNOTFILE ]]; then python $POLYFUNDIR/merge_annot_polyfun.py --parquet-in ${PARQUET} --annot-file ${ANNOTFILE} --drop-regex 'Conserved_LindbladToh|Conserved_Mammal|Conserved_Primate'
 fi; done
 
 

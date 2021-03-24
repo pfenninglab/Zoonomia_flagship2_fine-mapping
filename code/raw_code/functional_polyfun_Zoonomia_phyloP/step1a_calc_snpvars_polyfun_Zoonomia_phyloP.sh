@@ -1,17 +1,18 @@
 #!/bin/bash
 #SBATCH --partition=pfen_bigmem
-#SBATCH --time 4-4
-#SBATCH --job-name=snpvars
-#SBATCH --mem=60G
+#SBATCH --time 1-0:00:00
+#SBATCH --job-name=Asnpvars
+#SBATCH --mem=120G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=24
+#SBATCH --array=1-24%1
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
 ANNOTDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/baselineLF2.2.UKB
-DATADIR=${SETWD}/data/raw_data/functional_polyfun_baseline-LF2.2.UKB
-CODEDIR=${SETWD}/code/raw_code/functional_polyfun_baseline-LF2.2.UKB
+ZOONOMIADIR=${SETWD}/data/raw_data/zoonomia_annotations/annotation
+DATADIR=${SETWD}/data/raw_data/functional_polyfun_Zoonomia_phyloP
+CODEDIR=${SETWD}/code/raw_code/functional_polyfun_Zoonomia_phyloP
 POLYFUNDIR='/home/bnphan/src/polyfun'
 
 cd $CODEDIR; source activate polyfun
@@ -31,25 +32,8 @@ mkdir -p $OUTDIR $DATADIR $CACHEDIR
 # 2. Run PolyFun with L2-regularized S-LDSC, using LF2.2.UKB
 if [ ! -f ${OUTDIR}/${PREFIX}.22.bins.parquet ]; then
 python ${POLYFUNDIR}/polyfun.py --compute-h2-L2 --allow-missing \
---ref-ld-chr ${ANNOTDIR}/baselineLF2.2.UKB. \
+--ref-ld-chr ${ZOONOMIADIR}/200m_scoresPhyloP_20210214_HAR_20210304. \
 --w-ld-chr ${ANNOTDIR}/weights.UKB. \
 --output-prefix ${OUTDIR}/$PREFIX --sumstats $SUMSTATS
 fi
-
-# 3. Compute LD-scores for each SNP bin, do per chromosome
-for CHR in {1..22}; do
-if [ ! -f ${OUTDIR}/${PREFIX}.${CHR}.l2.ldscore.parquet ]; then
-python ${POLYFUNDIR}/polyfun.py --compute-ldscores --chr ${CHR} \
---output-prefix ${OUTDIR}/$PREFIX --ld-ukb --ld-dir $CACHEDIR
-fi
-done
-
-# 4. Re-estimate per-SNP heritabilities via S-LDSC
-if [ ! -f ${OUTDIR}/${PREFIX}.22.snpvar_constrained.gz ]; then
-python ${POLYFUNDIR}/polyfun.py --compute-h2-bins \
---allow-missing --output-prefix ${OUTDIR}/$PREFIX \
---sumstats $SUMSTATS --w-ld-chr ${ANNOTDIR}/weights.UKB.
-fi
-
-
 
