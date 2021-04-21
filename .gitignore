@@ -1,4 +1,6 @@
 *.txt
 *.log
 *.logs
-
+*.parquet
+*aggregate.txt.gz
+*.gz
