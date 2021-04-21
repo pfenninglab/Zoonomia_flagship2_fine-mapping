@@ -12,16 +12,17 @@ for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 echo "Submitting job for ${PREFIX} GWAS."; OUTDIR=${DATADIR}/${PREFIX}/susie
 # 23G good for blocks w/ < 15k SNPs, 47G good for blocks <30k snps
-sbatch -p pool1,pfen1 --mem 23G --time 24:00:00 --array 1-22 \
+if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_phyloP_phast_HAR_aggregate.txt.gz ]]; then
+sbatch -p pool1,pfen1 --mem 45G --time 24:00:00 --array 1-22 \
 	--export=JobsFileName="${OUTDIR}/polyfun_all_jobs_@.txt" \
 	${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
-done
+fi; done
 
 
 ###########################################
 ## combine all the jobs together per trait
 ## catch the jobs that need a lot of RAM
-for ID in {1..20}; do
+for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 OUTDIR=${DATADIR}/${PREFIX}/susie
 ## merge all jobs together
@@ -37,14 +38,16 @@ fi; done
 ##################################################
 ## submit job to aggregate fine-mapping when done
 ## catch the jobs that need a lot of RAM
-for ID in {1..20}; do
+for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 N=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8
 SUMSTATS=${SETWD}/data/tidy_data/polyfun/munged/${PREFIX}.parquet
 OUTDIR=${DATADIR}/${PREFIX}/susie
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_phyloP_phast_HAR_aggregate.txt.gz ]]; then
+# if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_phyloP_phast_HAR_top_annot.txt.gz ]]; then
 echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 sbatch --export=OUTDIR=${OUTDIR},PREFIX=${PREFIX}_Zoonomia_phyloP_phast_HAR,SUMSTATS=${SUMSTATS},CUTOFF=${CUTOFF} \
---partition short1 --time 2:00:00 --mem 30G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
-fi; done
+--partition pool1,interactive,short1,pfen1,pfen_bigmem --time 2:00:00 --mem 30G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
+# fi; 
+done
+

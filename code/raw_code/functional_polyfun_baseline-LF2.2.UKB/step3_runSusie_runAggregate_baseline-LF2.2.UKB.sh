@@ -8,7 +8,7 @@ CUTOFF=5e-8; cd $CODEDIR;
 
 #######################################
 ## split finemapping job by chromosome 
-for ID in {5..24}; do
+for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 echo "Submitting job for ${PREFIX} GWAS."; OUTDIR=${DATADIR}/${PREFIX}/susie
 # 23G good for blocks w/ < 15k SNPs, 47G good for blocks <30k snps
@@ -44,10 +44,10 @@ PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_
 N=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8; OUTDIR=${DATADIR}/${PREFIX}/susie
 SUMSTATS=${SETWD}/data/tidy_data/polyfun/munged/${PREFIX}.parquet
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_baseline-LF2.2.UKB_aggregate.txt.gz ]]; then
+if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_baseline-LF2.2.UKB_top_annot.txt.gz ]]; then
 echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 sbatch --export=OUTDIR=${OUTDIR},PREFIX=${PREFIX}_baseline-LF2.2.UKB,SUMSTATS=${SUMSTATS},CUTOFF=${CUTOFF} \
---partition interactive --time 3:00:00 --mem 30G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
+--partition pool1 --time 2:00:00 --mem 23G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
 fi
 done
 

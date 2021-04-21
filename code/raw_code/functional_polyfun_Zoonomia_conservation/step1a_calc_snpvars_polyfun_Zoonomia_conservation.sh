@@ -5,7 +5,7 @@
 #SBATCH --mem=120G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=1-24%1
+#SBATCH --array=1-24%3
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
@@ -15,7 +15,8 @@ DATADIR=${SETWD}/data/raw_data/functional_polyfun_Zoonomia_conservation
 CODEDIR=${SETWD}/code/raw_code/functional_polyfun_Zoonomia_conservation
 POLYFUNDIR='/home/bnphan/src/polyfun'
 
-cd $CODEDIR; source activate polyfun
+cd $CODEDIR; 
+source ~/.bashrc; conda activate polyfun
 
 PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 N=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)

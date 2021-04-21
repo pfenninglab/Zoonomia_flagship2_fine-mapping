@@ -5,7 +5,7 @@
 #SBATCH --mem=10G
 #SBATCH --error=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
 #SBATCH --output=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
-#SBATCH --array=21-24
+#SBATCH --array=1-24
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache

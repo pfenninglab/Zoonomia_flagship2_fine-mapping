@@ -5,7 +5,7 @@
 #SBATCH --mem=120G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=1-24%1
+#SBATCH --array=1-24%2
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache

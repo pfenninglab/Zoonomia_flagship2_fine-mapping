@@ -46,10 +46,10 @@ N=$( awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data
 CUTOFF=5e-8
 SUMSTATS=${SETWD}/data/tidy_data/polyfun/munged/${PREFIX}.parquet
 OUTDIR=${DATADIR}/${PREFIX}/susie
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_nonfunct_finemapping_aggregate.txt.gz ]]; then
+# if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_nonfunct_finemapping_top_annot.txt.gz ]]; then
 echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 sbatch --export=OUTDIR=${OUTDIR},PREFIX=${PREFIX}_nonfunct_finemapping,SUMSTATS=${SUMSTATS},CUTOFF=${CUTOFF} \
 --partition interactive,short1 --time 2:00:00 --mem 30G ${CODEDIR}/slurm_polyfun_aggregate.sh
-fi
+# fi
 done
 

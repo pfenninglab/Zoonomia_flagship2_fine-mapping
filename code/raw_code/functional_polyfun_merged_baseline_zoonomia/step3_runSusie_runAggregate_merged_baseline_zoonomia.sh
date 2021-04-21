@@ -10,12 +10,13 @@ CUTOFF=5e-8; cd $CODEDIR;
 ## split finemapping job by chromosome 
 for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
-echo "Submitting job for ${PREFIX} GWAS."; OUTDIR=${DATADIR}/${PREFIX}/susie
+OUTDIR=${DATADIR}/${PREFIX}/susie
 # 23G good for blocks w/ < 15k SNPs, 47G good for blocks <30k snps
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_aggregate.txt.gz ]]; then
-sbatch -p pool1 --mem 23G --time 24:00:00 --array 1-22 \
-	--export=JobsFileName="${OUTDIR}/polyfun_all_jobs_@.txt" \
-	${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
+if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_aggregate.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
+echo "Submitting job for ${PREFIX} GWAS.";
+sbatch -p pool1,pfen1 --mem 45G --time 24:00:00 --array 1-22 \
+--export=JobsFileName="${OUTDIR}/polyfun_all_jobs_@.txt" \
+${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
 fi; done
 
 
@@ -27,13 +28,12 @@ PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_
 OUTDIR=${DATADIR}/${PREFIX}/susie
 ## merge all jobs together
 JobsFileName=${OUTDIR}/polyfun_all_jobs.txt
-if [[ ! -f $JobsFileName  ]]; then cat ${OUTDIR}/polyfun_all_jobs_*.txt > $JobsFileName; fi
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_aggregate.txt.gz ]]; then
+if [[ ! -f $JobsFileName  && -f ${OUTDIR}/polyfun_all_jobs_22.txt || $(wc -l $JobsFileName | cut -d ' ' -f1 ) == 0 ]]; then cat ${OUTDIR}/polyfun_all_jobs_*.txt > $JobsFileName; fi
+if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_aggregate.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
 echo "Submitting job for ${PREFIX} GWAS."; 
-sbatch -p pfen3,pool3-bigmem --mem 120G --time 1-00:00:00 --export=JobsFileName=${JobsFileName} \
-	${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
-fi
-done
+sbatch -p pfen_bigmem,pool3-bigmem,pfen3 --mem 150G --time 1-00:00:00 --export=JobsFileName=${JobsFileName} \
+${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
+fi; done
 
 
 ##################################################
@@ -43,11 +43,12 @@ for ID in {1..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 N=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8
-echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 SUMSTATS=${SETWD}/data/tidy_data/polyfun/munged/${PREFIX}.parquet
 OUTDIR=${DATADIR}/${PREFIX}/susie
-if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_aggregate.txt.gz ]]; then
+# if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_merged_baseline_zoonomia_top_annot.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
+echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 sbatch --export=OUTDIR=${OUTDIR},PREFIX=${PREFIX}_merged_baseline_zoonomia,SUMSTATS=${SUMSTATS},CUTOFF=${CUTOFF} \
---partition interactive --time 2:00:00 --mem 30G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
-fi; done
+--partition pfen1,pool1 --time 2:00:00 --mem 23G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
+# fi; 
+done
 

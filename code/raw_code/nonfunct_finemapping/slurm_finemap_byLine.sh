@@ -6,6 +6,7 @@
 #SBATCH --output=logs/runLine_%A_%a.txt
 
 source ~/.bashrc; conda activate polyfun;
+
 # just in case array wildcard '@' is in the JobsFileName
 JobsFileName=$(echo $JobsFileName | sed "s/@/$SLURM_ARRAY_TASK_ID/g")
 NumJobs=$(wc -l $JobsFileName | cut -d ' ' -f1)

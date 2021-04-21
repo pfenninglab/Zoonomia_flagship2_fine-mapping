@@ -19,7 +19,7 @@ ANNOTFILE=${ANNOTDIR}/${LABEL}.${CHR}.annot.parquet
 if [[ ! -f $ANNOTFILE ]]; then
 for FILE in $DATADIR/bed/Macaque_striatum*.hg19.bed.gz; do
 echo "Extracting chr${CHR} for $(basename $FILE)."
-NAME=$(basename $FILE .hg19.bed.gz)x
+NAME=$(basename $FILE .hg19.bed.gz)
 ANNOTFILE2=${ANNOTDIR}/striatum.${NAME}.hg19.${CHR}.annot.parquet
 if [[ ! -f $ANNOTFILE2 ]]; then
 python $POLYFUNDIR/make_annot_polyfun.py --annot-file ${ANNOTFILE2} --name ${NAME} \
@@ -28,22 +28,9 @@ fi
 done
 
 ## merge together the annotations together into 1 parquet file per chr
-PARQUET2=$(ls ${ANNOTDIR}/striatum.*.${CHR}.annot.parquet | sed '/MSN/!d' | tr '\n' ','| sed 's/,$//g')
-ANNOTFILE2=${ANNOTDIR}/striatum_MSN.${CHR}.annot.parquet
-if [[ ! -f $ANNOTFILE2 ]]; then python $POLYFUNDIR/merge_annot_polyfun.py --parquet-in ${PARQUET2} --annot-file ${ANNOTFILE2}; fi
-
-## merge together the the rhesus-human orth annotations together into 1 parquet file per chr
-PARQUET3=$(ls ${ANNOTDIR}/striatum.*.${CHR}.annot.parquet | sed '/MSN/!d' | tr '\n' ','| sed 's/,$//g')
-ANNOTFILE3=${ANNOTDIR}/striatum_nonMSN.${CHR}.annot.parquet
-if [[ ! -f $ANNOTFILE3 ]]; then python $POLYFUNDIR/merge_annot_polyfun.py --parquet-in ${PARQUET3} --annot-file ${ANNOTFILE3}; fi
-
-## merge all of the annotations together
+PARQUET=$(ls ${ANNOTDIR}/striatum.*.${CHR}.annot.parquet | sed '/MSN/!d' | tr '\n' ','| sed 's/,$//g')
 python $POLYFUNDIR/merge_annot_polyfun.py --annot-file ${ANNOTFILE} \
---parquet-in ${ANNOTFILE2},${ANNOTFILE3},${ANNOTDIR}/merged_baselineLF_200m_conservation.${CHR}.annot.parquet
-
-# ## merge all of the annotations together
-# python $POLYFUNDIR/merge_annot_polyfun.py --annot-file ${ANNOTFILE} \
-# --parquet-in ${ANNOTFILE2},${ANNOTDIR}/caudate_zoonomia_baseline.${CHR}.annot.parquet
+--parquet-in ${PARQUET},${ANNOTDIR}/caudate_zoonomia_baseline.${CHR}.annot.parquet
 fi
 done
 
