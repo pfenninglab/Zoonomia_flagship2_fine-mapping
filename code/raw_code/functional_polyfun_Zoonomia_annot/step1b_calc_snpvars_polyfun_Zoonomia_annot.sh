@@ -2,7 +2,7 @@
 #SBATCH --partition=pool1,pool3-bigmem,pfen_bigmem,pfen1,pfen2
 #SBATCH --time 1-0:00:00
 #SBATCH --job-name=Bsnpvars
-#SBATCH --dependency=afterok:1468607
+#SBATCH --dependency=afterok:1470118
 #SBATCH --mem=45G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
