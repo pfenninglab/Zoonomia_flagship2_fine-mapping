@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=pool1,pool3-bigmem,pfen1,pfen_bigmem
 #SBATCH --time 1-0:00:00
-#SBATCH --dependency=afterok:1468617
+#SBATCH --dependency=afterok:1470554
 #SBATCH --job-name=Bsnpvars
 #SBATCH --mem=45G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
