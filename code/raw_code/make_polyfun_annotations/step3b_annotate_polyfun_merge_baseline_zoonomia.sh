@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH --partition=pfen3
+#SBATCH --partition=pfen1,pfen3,pfen_bigmem
 #SBATCH --time=0-8
 #SBATCH --mem=20G
 #SBATCH --array=1-22
@@ -34,7 +34,7 @@ if [[ ! -f ${ANNOTDIR}/${LABEL}.${SLURM_ARRAY_TASK_ID}.l2.M ]]; then python ${PO
 ###############################################
 ## 3) compute LD-scores for phyloP annotations
 THECALL="source ~/.bashrc; conda activate polyfun; if [[ ! -f ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ]]; then python ${POLYFUNDIR}/compute_ldscores_ukb.py --annot ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.annot.parquet --ld-dir ${GWASDIR}/polyfun/LD_cache --out ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ; fi"
-sbatch --partition=pfen1,pfen3 --time 1-00:00:00 --job-name=merge --mem=45G --array=$SLURM_ARRAY_TASK_ID \
+sbatch --partition=pfen1 --time 1-00:00:00 --job-name=merge --mem=45G --array=$SLURM_ARRAY_TASK_ID \
 --error=logs/run_annot_%A_%a.out.txt --output=logs/run_annot_%A_%a.out.txt --wrap="${THECALL}"
 
 # rm ${ANNOTDIR}/zoo.*.${SLURM_ARRAY_TASK_ID}.annot.parquet

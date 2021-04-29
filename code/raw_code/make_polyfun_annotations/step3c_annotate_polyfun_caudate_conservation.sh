@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH --partition=pfen_bigmem
+#SBATCH --partition=pfen1,pfen_bigmem
 #SBATCH --time=0-8
 #SBATCH --mem=20G
 #SBATCH --array=1-22
@@ -50,5 +50,3 @@ python ${POLYFUNDIR}/make_M_polyfun.py --out ${ANNOTDIR}/${LABEL}.${SLURM_ARRAY_
 THECALL="source ~/.bashrc; conda activate polyfun; if [[ ! -f ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ]]; then python ${POLYFUNDIR}/compute_ldscores_ukb.py --annot ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.annot.parquet --ld-dir ${GWASDIR}/polyfun/LD_cache --out ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ; fi"
 sbatch --partition=pfen1,pfen_bigmem --time 12:00:00 --job-name=${LABEL} --mem=62G --array=${SLURM_ARRAY_TASK_ID} \
 --error=logs/run_annot_%A_%a.out.txt --output=logs/run_annot_%A_%a.out.txt --wrap="${THECALL}"
-
-# rm ${ANNOTDIR}/Caud*
