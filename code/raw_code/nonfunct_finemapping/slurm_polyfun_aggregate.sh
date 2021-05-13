@@ -16,8 +16,8 @@ source ~/.bashrc; conda activate polyfun
 ###########################################################
 # aggregate finemapping results over different SNP blocks
 FINESNP=${OUTDIR}/../${PREFIX}_aggregate.txt.gz
-if [[ ! -f $FINESNP ]]; then # 
-python ${POLYFUNDIR}/aggregate_finemapper_results.py --allow-missing-jobs \
+if [[ ! -f $FINESNP ]]; then # --allow-missing-jobs 
+python ${POLYFUNDIR}/aggregate_finemapper_results.py \
 --out-prefix ${OUTDIR}/polyfun_all --sumstats ${SUMSTATS} \
 --pvalue-cutoff ${CUTOFF} --out ${FINESNP}
 fi
