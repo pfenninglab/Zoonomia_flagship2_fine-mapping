@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH --partition=pfen3
+#SBATCH --partition=pfen_bigmem
 #SBATCH --time=0-8
 #SBATCH --mem=20G
 #SBATCH --array=1-22
@@ -46,19 +46,18 @@ fi
 #################################################
 ## 1b) annotate the ENCODE3 annotations separately
 FILES=$(ls $DATADIR/bed_hg19/ENCODE3*.hg19.bed.gz )
-## the final annotation file
-ANNOTFILE=${ANNOTDIR}/${LABEL}.${SLURM_ARRAY_TASK_ID}.annot.parquet
 for FILE in $FILES ; do
 echo "Extracting chr${SLURM_ARRAY_TASK_ID} for $(basename $FILE)."
 NAME=$(basename $FILE .hg19.bed.gz | sed 's/^p/Zoonomia_p/g' )
 ANNOTFILE2=${ANNOTDIR}/encode3.${NAME}.hg19.${SLURM_ARRAY_TASK_ID}.annot.parquet
 if [[ ! -f $ANNOTFILE2 ]]; then
 TMP=${DATADIR}/bed_hg19/${NAME}.${SLURM_ARRAY_TASK_ID}.tmp.bed.gz
-if [[ ! -f $TMP ]]; then zcat $FILE | awk -v SLURM_ARRAY_TASK_ID="chr${SLURM_ARRAY_TASK_ID}" '$1 == SLURM_ARRAY_TASK_ID {print}' | gzip > $TMP; fi
+zcat $FILE | awk -v SLURM_ARRAY_TASK_ID="chr${SLURM_ARRAY_TASK_ID}" '$1 == SLURM_ARRAY_TASK_ID {print}' | gzip > $TMP
 python $POLYFUNDIR/make_annot_polyfun.py --annot-file ${ANNOTFILE2} --name ${NAME} \
 --bed-file ${TMP} --parquet-file ${DATADIR}/UKB_merged_snps.${SLURM_ARRAY_TASK_ID}.parquet
 rm $TMP
-fi; done
+fi
+done
 
 
 #####################################################################
@@ -68,7 +67,7 @@ if [[ ! -f ${ANNOTDIR}/${LABEL}.${SLURM_ARRAY_TASK_ID}.l2.M ]]; then python ${PO
 ###############################################
 ## 3) compute LD-scores for phyloP annotations
 THECALL="source ~/.bashrc; conda activate polyfun; if [[ ! -f ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ]]; then python ${POLYFUNDIR}/compute_ldscores_ukb.py --annot ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.annot.parquet --ld-dir ${GWASDIR}/polyfun/LD_cache --out ${ANNOTDIR}/${LABEL}.\${SLURM_ARRAY_TASK_ID}.l2.ldscore.parquet ; fi"
-sbatch --partition=pfen1,pfen3 --job-name=${LABEL} --mem=45G --array=${SLURM_ARRAY_TASK_ID} --time 1-0:00:00 \
+sbatch --partition=pfen1,pfen_bigmem --job-name=${LABEL} --mem=45G --array=${SLURM_ARRAY_TASK_ID} --time 1-0:00:00 \
 --error=logs/run_annot_%A_%a.out.txt --output=logs/run_annot_%A_%a.out.txt --wrap="${THECALL}"
 
 # rm ${ANNOTDIR}/zoo.* ${ANNOTDIR}/encode3.*

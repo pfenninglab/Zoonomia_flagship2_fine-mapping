@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH --partition=pfen1,pfen_bigmem
+#SBATCH --partition=pfen_bigmem
 #SBATCH --time=0-8
 #SBATCH --mem=20G
+#SBATCH --dependency=afterok:1511781
 #SBATCH --array=1-22
 #SBATCH --job-name=caud_merge_annot
 #SBATCH --error=logs/caud_merge_annot_%A_%a.txt
@@ -25,19 +26,17 @@ LABEL=Caudate_Zoonomia_annot_baselineLF
 ## the final annotation file
 ANNOTFILE=${ANNOTDIR}/${LABEL}.${SLURM_ARRAY_TASK_ID}.annot.parquet
 if [[ ! -f $ANNOTFILE ]]; then
-echo "Dropping old Zoonomia annotations chr${SLURM_ARRAY_TASK_ID} with regex: Zoonomia."
-ANNOTFILE2=${ANNOTDIR}/tmpCaudate.hg19.${SLURM_ARRAY_TASK_ID}.annot.parquet
+ANNOTFILE2=${ANNOTDIR}/Caudate_conservation.${SLURM_ARRAY_TASK_ID}.annot.parquet
 if [[ ! -f $ANNOTFILE2 ]]; then
+echo "Dropping old Zoonomia annotations chr${SLURM_ARRAY_TASK_ID} with regex: Zoonomia."
 python $POLYFUNDIR/merge_annot_polyfun.py --annot-file ${ANNOTFILE2} \
 --parquet-in ${ANNOTDIR}/caudate_zoonomia_baseline.${SLURM_ARRAY_TASK_ID}.annot.parquet \
---drop-regex 'Zoonomia|HAR'
+--keep-regex 'Caud'
 fi
 
-# merge together caudate annotations and new Zoonomia annotations, and ENCODE3 annotations
-ANNOTFILE3=$(ls ${ANNOTDIR}/encode3*.${SLURM_ARRAY_TASK_ID}.annot.parquet | tr '\n' ','| sed 's/,$//g')
-ANNOTFILE4=${ANNOTDIR}/Zoonomia_annot.${SLURM_ARRAY_TASK_ID}.annot.parquet
-python $POLYFUNDIR/merge_annot_polyfun.py --annot-file ${ANNOTFILE} \
---parquet-in ${ANNOTFILE2},${ANNOTFILE3},${ANNOTFILE4}
+PARQUET=${ANNOTDIR}/Caudate_conservation.${SLURM_ARRAY_TASK_ID}.annot.parquet,${ANNOTDIR}/Zoonomia_annot.${SLURM_ARRAY_TASK_ID}.annot.parquet,${GWASDIR}/polyfun/baselineLF2.2.UKB/baselineLF2.2.UKB.${SLURM_ARRAY_TASK_ID}.annot.parquet
+PARQUET2=$(ls ${ANNOTDIR}/encode3*.${SLURM_ARRAY_TASK_ID}.annot.parquet| sed '/HAR/d' | tr '\n' ','| sed 's/,$//g')
+python $POLYFUNDIR/merge_annot_polyfun.py --parquet-in ${PARQUET},${PARQUET2} --annot-file ${ANNOTFILE} --drop-regex 'Conserved_LindbladToh|Conserved_Mammal|Conserved_Primate'
 fi
 
 #####################################################################
