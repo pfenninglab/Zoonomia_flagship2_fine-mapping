@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH --partition=gpu,interactive,short1
 #SBATCH --time 2:00:00
+#SBATCH --dependency=afterok:1565504,1523919
 #SBATCH --job-name=split_jobs
 #SBATCH --mem=10G
 #SBATCH --error=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
 #SBATCH --output=logs/polyfun_funct_Zoonomia_phyloP_%A_%a.txt
-#SBATCH --array=1-8
+#SBATCH --array=24
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
