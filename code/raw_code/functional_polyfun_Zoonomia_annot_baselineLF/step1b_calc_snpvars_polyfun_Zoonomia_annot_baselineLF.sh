@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --partition=pool1,pool3-bigmem,pfen1,pfen_bigmem
-#SBATCH --time 1-0:00:00
-#SBATCH --dependency=afterok:1470554
+#SBATCH --partition=pfen1
+##SBATCH --time 1-0:00:00
+#SBATCH --dependency=afterok:1565504,1523919
 #SBATCH --job-name=Bsnpvars
 #SBATCH --mem=45G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=1-8%3
+#SBATCH --array=9-24%8
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache

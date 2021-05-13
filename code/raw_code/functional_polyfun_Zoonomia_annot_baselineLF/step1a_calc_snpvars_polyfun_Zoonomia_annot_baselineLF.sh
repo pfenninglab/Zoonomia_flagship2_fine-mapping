@@ -5,7 +5,7 @@
 #SBATCH --mem=120G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=9-24%3
+#SBATCH --array=1-24%3
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
@@ -37,6 +37,3 @@ python ${POLYFUNDIR}/polyfun.py --compute-h2-L2 --allow-missing \
 --w-ld-chr ${ANNOTDIR}/weights.UKB. \
 --output-prefix ${OUTDIR}/$PREFIX --sumstats $SUMSTATS
 fi
-
-# sed -i 's/merged_baseline_zoonomia/Zoonomia_annot_baselineLF/g' $CODEDIR/step*
-# sed -i 's/Zoonomia_conservation_baselineLF/Zoonomia_annot_baselineLF/g' $CODEDIR/step*

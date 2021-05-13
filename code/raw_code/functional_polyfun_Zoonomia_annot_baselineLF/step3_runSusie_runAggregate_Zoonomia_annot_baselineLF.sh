@@ -8,7 +8,7 @@ CUTOFF=5e-8; cd $CODEDIR;
 
 #######################################
 ## split finemapping job by chromosome 
-for ID in {1..24}; do
+for ID in {9..24}; do
 PREFIX=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
 OUTDIR=${DATADIR}/${PREFIX}/susie
 # 23G good for blocks w/ < 15k SNPs, 47G good for blocks <30k snps
@@ -31,7 +31,7 @@ JobsFileName=${OUTDIR}/polyfun_all_jobs.txt
 if [[ ! -f $JobsFileName  && -f ${OUTDIR}/polyfun_all_jobs_22.txt || $(wc -l $JobsFileName | cut -d ' ' -f1 ) == 0 ]]; then cat ${OUTDIR}/polyfun_all_jobs_*.txt > $JobsFileName; fi
 if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_annot_baselineLF_aggregate.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
 echo "Submitting job for ${PREFIX} GWAS."; 
-sbatch -p pfen_bigmem,pool3-bigmem,pfen3 --mem 150G --time 1-00:00:00 --export=JobsFileName=${JobsFileName} \
+sbatch -p pfen_bigmem,pool3-bigmem,pfen3 --mem 120G --time 1-00:00:00 --export=JobsFileName=${JobsFileName} \
 ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_finemap_byLine.sh
 fi; done
 
@@ -45,10 +45,10 @@ N=$(awk -F'\t' -v IND=${ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/
 CUTOFF=5e-8
 SUMSTATS=${SETWD}/data/tidy_data/polyfun/munged/${PREFIX}.parquet
 OUTDIR=${DATADIR}/${PREFIX}/susie
-# if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_annot_baselineLF_top_annot.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
+if [[ ! -f ${DATADIR}/${PREFIX}/${PREFIX}_Zoonomia_annot_baselineLF_top_annot.txt.gz && -f ${OUTDIR}/polyfun_all_jobs_22.txt ]]; then
 echo "Aggregating results from ${PREFIX} GWAS with P < ${CUTOFF} cutoff for loci."
 sbatch --export=OUTDIR=${OUTDIR},PREFIX=${PREFIX}_Zoonomia_annot_baselineLF,SUMSTATS=${SUMSTATS},CUTOFF=${CUTOFF} \
---partition pfen1,pool1 --time 2:00:00 --mem 23G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
-# fi; 
+--partition interactive,short1 --time 2:00:00 --mem 23G ${SETWD}/code/raw_code/nonfunct_finemapping/slurm_polyfun_aggregate.sh
+fi; 
 done
 
