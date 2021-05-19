@@ -16,8 +16,8 @@ source ~/.bashrc; conda activate polyfun
 ###########################################################
 # aggregate finemapping results over different SNP blocks
 FINESNP=${OUTDIR}/../${PREFIX}_aggregate.txt.gz
-if [[ ! -f $FINESNP ]]; then # --allow-missing-jobs 
-python ${POLYFUNDIR}/aggregate_finemapper_results.py \
+if [[ ! -f $FINESNP ]]; then #
+python ${POLYFUNDIR}/aggregate_finemapper_results.py --allow-missing-jobs \
 --out-prefix ${OUTDIR}/polyfun_all --sumstats ${SUMSTATS} \
 --pvalue-cutoff ${CUTOFF} --out ${FINESNP}
 fi
@@ -47,7 +47,7 @@ OUT=$(echo $FILE | sed 's/polyfun_all/top_annot/g')
 COL=$(zcat $PIPSNPS | awk -v col=CHR 'NR==1{for(i=1;i<=NF;i++) {if($i==col) {print i ;exit}} }')
 zcat $PIPSNPS | awk  -v COL=$COL -v VAR=${CHR} '{if( NR == 1 || $COL == VAR ) print }' | gzip > $FILE
 python ${POLYFUNDIR}/extract_annotations.py \
---annot ${ANNOTDIR}/Zoonomia_annot_baselineLF.${CHR}.annot.parquet \
+--annot ${ANNOTDIR}/Zoonomia_annot_baselineLF2.${CHR}.annot.parquet \
 --pips $FILE --pip-cutoff $PIP_CUTOFF --out $OUT
 rm $FILE; 
 # fi;
