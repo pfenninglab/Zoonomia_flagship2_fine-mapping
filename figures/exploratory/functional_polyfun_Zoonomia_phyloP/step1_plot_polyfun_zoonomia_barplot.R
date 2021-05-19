@@ -25,23 +25,25 @@ pheno = readRDS(file = gwas_fn)
 annot_fn = list.dirs(path = 'data/raw_data', recursive = F) %>%
   lapply(list.dirs, recursive = F) %>% unlist() %>% 
   grep(pattern = 'funct', value = T) %>%
-  grep(pattern = 'UKB|annot|nonfunct', value = T) %>%
-  lapply(list.files, pattern = '_causal_set.txt.gz', full.names = T) %>%
+  grep(pattern = 'UKB|annot/|nonfunct|LF2/', value = T) %>%
+  lapply(list.files, pattern = '_top_annot.txt.gz', full.names = T) %>%
   unlist()
 names(annot_fn) = annot_fn
 input = annot_fn %>% lapply(fread) %>% rbindlist(idcol = 'file', fill = TRUE) %>%
   as_tibble() 
 
 main_groups = c('non-functional','ZoonomiaAnnot','baselineLF2.2.UKB', 'base + ZooAnnot + cCRE')
-snps_df = input %>% mutate(FILE = ss(ss(file, '/', 4), '-'),
+snps_df = input %>% 
+  select(c(file:A2, contains('Zoonomia'),contains("ENCODE3") ,contains('synonymous'))) %>%
+  mutate(FILE = ss(ss(file, '/', 4), '-'),
   group = ss(file, '/', 3), 
   group = case_when(
-    grepl('functional_polyfun_Zoonomia_annot_baselineLF', group) ~ 'base + ZooAnnot + cCRE', 
+    grepl('functional_polyfun_Zoonomia_annot_baselineLF2', group) ~ 'base + ZooAnnot + cCRE', 
     grepl('functional_polyfun_baseline-LF2.2.UKB', group) ~ 'baselineLF2.2.UKB', 
     grepl('functional_polyfun_Zoonomia_annot', group) ~ 'ZoonomiaAnnot', 
     TRUE ~ 'non-functional'),
   group = factor(group, main_groups)) %>%
-  filter(group != 'base + ZooAnnot + cCRE') %>%
+  # filter(group != 'base + ZooAnnot + cCRE') %>%
   left_join(pheno, by = 'FILE')
 
 table(snps_df$group)
@@ -49,17 +51,18 @@ table(snps_df$group)
 ######################################################################
 ## read in the bed files for phyloP, primate PhastCons, HARS, CHARs ##
 bed_fn = list.files(path = here('data/raw_data/zoonomia_annotations/bed_hg19'),
-                    pattern = '.bed.gz', full.names = T)
-names(bed_fn) = basename(bed_fn) %>% ss('\\.hg19\\.bed\\.gz')
+                    pattern = '.bed.gz', full.names = T) %>%
+  grep(pattern = 'HAR',value = T)
+names(bed_fn) = basename(bed_fn) %>% ss('\\.hg19\\.bed\\.gz') 
 bed_fn = bed_fn[! grepl('flanking', bed_fn)]
 bed_gr = bed_fn %>% lapply(import) %>% GRangesList()
 
 snps_df = bed_gr %>% as.list() %>%
   map( ~ countOverlaps(subject = .x, query = GRanges(paste0('chr',snps_df$CHR,':',snps_df$BP)))) %>%
-  bind_cols(snps_df, .)
+  bind_cols(snps_df, . )
 
-
-# colors for conserved and accelerated 241mam phyloP
+########################################################################
+## annotate finemapped SNPs w/ phyloP, primate PhastCons, HARS, CHARs ##
 top_phyloP_lvls = c('Con.top.0-1%', 'Con.top.1-2%', 'Con.top.2-3%', 'Con.top.3-4%',
                     'Acc.top.3-4%', 'Acc.top.2-3%', 'Acc.top.1-2%', 'Acc.top.0-1%',  
                     'Other')
@@ -71,7 +74,7 @@ names(top_phyloP_cols) = c('Con.top.3-4%', 'Con.top.2-3%', 'Con.top.1-2%', 'Con.
 # colors for 43primate phastCons
 top_phastCons_lvls = c('PhastCons.top.0-1%', 'PhastCons.top.1-2%', 'PhastCons.top.2-3%', 
                        'PhastCons.top.3-4%', 'PhastCons.top.4-5%', 'Other')
-top_phastCons_cols = c(brewer.pal(5,'PuBuGn'),'#bdbdbd')
+top_phastCons_cols = c(rev(brewer.pal(5,'PuBuGn')),'#bdbdbd')
 names(top_phastCons_cols) = top_phastCons_lvls
 
 # colors for 3 ENCODE3 cCRE annotations
@@ -87,23 +90,23 @@ names(HAR_cols) = HAR_lvls
 snps_df2 = snps_df %>% mutate(
   # Group 241mammals phyloP
   top_phyloP = case_when(
-    `phyloPaccl.241mam.top0-1%` == 1 ~ 'Acc.top.0-1%',
-    `phyloPaccl.241mam.top1-2%` == 1 ~ 'Acc.top.1-2%',
-    `phyloPaccl.241mam.top2-3%` == 1 ~ 'Acc.top.2-3%',
-    `phyloPaccl.241mam.top3-4%` == 1 ~ 'Acc.top.3-4%',
-    `phyloPcons.241mam.top0-1%` == 1 ~ 'Con.top.0-1%',
-    `phyloPcons.241mam.top1-2%` == 1 ~ 'Con.top.1-2%',
-    `phyloPcons.241mam.top2-3%` == 1 ~ 'Con.top.2-3%',
-    `phyloPcons.241mam.top3-4%` == 1 ~ 'Con.top.3-4%',
+    `Zoonomia_phyloPaccl.241mam.top0-1%` == 1 ~ 'Acc.top.0-1%',
+    `Zoonomia_phyloPaccl.241mam.top1-2%` == 1 ~ 'Acc.top.1-2%',
+    `Zoonomia_phyloPaccl.241mam.top2-3%` == 1 ~ 'Acc.top.2-3%',
+    `Zoonomia_phyloPaccl.241mam.top3-4%` == 1 ~ 'Acc.top.3-4%',
+    `Zoonomia_phyloPcons.241mam.top0-1%` == 1 ~ 'Con.top.0-1%',
+    `Zoonomia_phyloPcons.241mam.top1-2%` == 1 ~ 'Con.top.1-2%',
+    `Zoonomia_phyloPcons.241mam.top2-3%` == 1 ~ 'Con.top.2-3%',
+    `Zoonomia_phyloPcons.241mam.top3-4%` == 1 ~ 'Con.top.3-4%',
     TRUE ~ 'Other'),
   top_phyloP = factor(top_phyloP, top_phyloP_lvls), 
   # Group primate PhastCons
   top_phastCons = case_when(
-    `phastCons.43prim.top0-1%` == 1 ~ 'PhastCons.top.0-1%',
-    `phastCons.43prim.top1-2%` == 1 ~ 'PhastCons.top.1-2%',
-    `phastCons.43prim.top2-3%` == 1 ~ 'PhastCons.top.2-3%',
-    `phastCons.43prim.top3-4%` == 1 ~ 'PhastCons.top.3-4%',
-    `phastCons.43prim.top4-5%` == 1 ~ 'PhastCons.top.4-5%',
+    `Zoonomia_phastCons.43prim.top0-1%` == 1 ~ 'PhastCons.top.0-1%',
+    `Zoonomia_phastCons.43prim.top1-2%` == 1 ~ 'PhastCons.top.1-2%',
+    `Zoonomia_phastCons.43prim.top2-3%` == 1 ~ 'PhastCons.top.2-3%',
+    `Zoonomia_phastCons.43prim.top3-4%` == 1 ~ 'PhastCons.top.3-4%',
+    `Zoonomia_phastCons.43prim.top4-5%` == 1 ~ 'PhastCons.top.4-5%',
     TRUE ~ 'Other'),
   top_phastCons = factor(top_phastCons, top_phastCons_lvls), 
   # Group ENCODE3 cCREs
@@ -122,7 +125,7 @@ snps_df2 = snps_df %>% mutate(
 
 ####################################
 ## save table of fine-mapped SNPs ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210510.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210513.rds')
 saveRDS(snps_df2, file = poly_fn)
 
 #################################
@@ -133,12 +136,13 @@ height_fig = 1.75; width_fig = 2.25; font_fig = 7
 
 
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_20210510.ppt.pdf'))
+               paste0('polyfun_zoonomia_finemapping_20210513.ppt.pdf'))
 # pdf(plot_fn, height = height_ppt, width = width_ppt)
 for (cutoff in c(.95, .9, .5, .25)){
 plot_fn = here(PROJDIR,'plots',
-  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20210510.ppt.pdf'))
+  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20210513.ppt.pdf'))
 pdf(plot_fn, height = height_ppt, width = width_ppt)
+
 pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   geom_bar(aes(fill = top_phyloP)) + 
   geom_text(stat='count', aes(label = ..count.. ), vjust=-1, size= 2.5)+
@@ -150,7 +154,6 @@ pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   theme(legend.key.size = unit(.5, 'cm'), legend.position = 'bottom') 
 print(pp)
-
 
 pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   geom_bar(aes(fill = top_phastCons)) + 
@@ -164,7 +167,6 @@ pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   theme(legend.key.size = unit(.5, 'cm'), legend.position = 'bottom') 
 print(pp)
 
-
 pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   geom_bar(aes(fill = cCRE_group)) + 
   geom_text(stat='count', aes(label = ..count.. ), vjust=-1, size= 2.5)+
@@ -176,7 +178,6 @@ pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   theme(legend.key.size = unit(.5, 'cm'), legend.position = 'bottom') 
 print(pp)
-
 
 pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   geom_bar(aes(fill = HAR_group)) + 
@@ -190,7 +191,20 @@ pp = ggplot(data = snps_df2 %>% filter(PIP >= cutoff) , aes(x = group)) +
   theme(legend.key.size = unit(.5, 'cm'), legend.position = 'bottom') 
 print(pp)
 
-
 dev.off()
 }
+
+
 # dev.off()
+
+# df <- snps_df2 %>% ddply(.(group, TRAIT),transform,len=length(PIP))
+# pp = ggplot(df,aes(x=1-PIP,color=group)) +
+#   geom_step(aes(len=len,y=..y.. * len),stat="ecdf") + 
+#   facet_wrap(~TRAIT, scales = 'free_y', ncol = 6) + 
+#   scale_y_continuous(expand = expansion(mult = c(0, .4))) + 
+#   xlab('Fine-mapping group') + ylab(paste0('Number of SNPs w/ PIP >',cutoff)) +
+#   theme_classic(base_size = 6 ) + guides(fill = guide_legend(nrow = 1)) + 
+#   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+#   theme(legend.key.size = unit(.5, 'cm'), legend.position = 'bottom') 
+# print(pp)
+

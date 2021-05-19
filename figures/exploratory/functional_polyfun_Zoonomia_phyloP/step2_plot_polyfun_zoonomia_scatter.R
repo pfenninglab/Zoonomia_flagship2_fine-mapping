@@ -15,7 +15,7 @@ library(wesanderson)
 PROJDIR='figures/exploratory/functional_polyfun_Zoonomia_phyloP'
 i_am(file.path(PROJDIR, 'step2_plot_polyfun_zoonomia_scatter.R'))
 
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210510.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210513.rds')
 snps_df = readRDS(file = poly_fn)
 
 snps_df2 = snps_df %>%
@@ -43,7 +43,7 @@ names(top_phyloP_cols) = c('Con.top.3-4%', 'Con.top.2-3%', 'Con.top.1-2%', 'Con.
 # colors for 43primate phastCons
 top_phastCons_lvls = c('PhastCons.top.0-1%', 'PhastCons.top.1-2%', 'PhastCons.top.2-3%', 
                        'PhastCons.top.3-4%', 'PhastCons.top.4-5%', 'Other')
-top_phastCons_cols = c(brewer.pal(5,'PuBuGn'),'#bdbdbd')
+top_phastCons_cols = c(rev(brewer.pal(5,'PuBuGn')),'#bdbdbd')
 names(top_phastCons_cols) = top_phastCons_lvls
 
 # colors for 3 ENCODE3 cCRE annotations
@@ -51,10 +51,8 @@ ENCODE3_cCRE_lvls = c('PLS', 'pELS', 'dELS', 'Other')
 ENCODE3_cCRE_cols = c(brewer.pal(3,'Dark2'),'#bdbdbd')
 names(ENCODE3_cCRE_cols) = ENCODE3_cCRE_lvls
 
-
-
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_PIPscatter_20210510.ppt.pdf'))
+               paste0('polyfun_zoonomia_finemapping_PIPscatter_20210513.ppt.pdf'))
 pdf(plot_fn, height = height_ppt, width = width_ppt)
 pp = ggplot(data = snps_df2, 
             aes(x = PIP_baseline, y = PIP)) + 
