@@ -52,7 +52,7 @@ ENCODE3_cCRE_cols = c(brewer.pal(3,'Dark2'),'#bdbdbd')
 names(ENCODE3_cCRE_cols) = ENCODE3_cCRE_lvls
 
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_PIPscatter_20210513.ppt.pdf'))
+               paste0('polyfun_zoonomia_finemapping_PIPscatter_20210521.ppt.pdf'))
 pdf(plot_fn, height = height_ppt, width = width_ppt)
 pp = ggplot(data = snps_df2, 
             aes(x = PIP_baseline, y = PIP)) + 
