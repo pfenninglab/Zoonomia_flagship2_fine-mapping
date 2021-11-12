@@ -32,18 +32,18 @@ if(FALSE){
   input = annot_fn %>% lapply(fread) %>% rbindlist(idcol = 'file', fill = TRUE) %>%
     as_tibble() 
   
-  main_groups = c('non-functional','ZoonomiaAnnot','baselineLF2.2.UKB', 'base + ZooAnnot + cCRE')
+  main_groups = c('non-functional','ZoonomiaAnnot','baseline-LF', 'baseline-LF+Zoonomia')
   snps_df = input %>% 
     select(c(file:A2, contains('Zoonomia'),contains("ENCODE3") ,contains('synonymous'))) %>%
     mutate(FILE = ss(ss(file, '/', 4), '-'),
            group = ss(file, '/', 3), 
            group = case_when(
-             grepl('functional_polyfun_Zoonomia_annot_baselineLF2', group) ~ 'base + ZooAnnot + cCRE', 
-             grepl('functional_polyfun_baseline-LF2.2.UKB', group) ~ 'baselineLF2.2.UKB', 
+             grepl('functional_polyfun_Zoonomia_annot_baselineLF2', group) ~ 'baseline-LF+Zoonomia', 
+             grepl('functional_polyfun_baseline-LF2.2.UKB', group) ~ 'baseline-LF', 
              grepl('functional_polyfun_Zoonomia_annot', group) ~ 'ZoonomiaAnnot', 
              TRUE ~ 'non-functional'),
            group = factor(group, main_groups)) %>%
-    # filter(group != 'base + ZooAnnot + cCRE') %>%
+    filter(group != 'ZoonomiaAnnot') %>%
     left_join(pheno, by = 'FILE')
   
   table(snps_df$group)
@@ -98,14 +98,14 @@ if(FALSE){
       ENCODE3.pELS == 1 ~ 'pELS',
       ENCODE3.PLS == 1 ~ 'PLS',
       TRUE ~ 'Other'), 
-    cCRE_group = factor(cCRE_group, ENCODE3_cCRE_lvls), 
-    # Group HAR1500bp or CHAR1500bp not in HAR1500bp
-    HAR_group = case_when(
-      zoonomia_HARs_20210402.1500bp == 1 ~ 'HAR1500bp',
-      zoonomia_CHARs_20210416.1500bp == 1 ~ 'CHAR1500bp',
-      TRUE ~ 'Other'), 
-    HAR_group = factor(HAR_group, HAR_lvls))
-  
+    cCRE_group = factor(cCRE_group, ENCODE3_cCRE_lvls))
+    # # Group HAR1500bp or CHAR1500bp not in HAR1500bp
+    # HAR_group = case_when(
+    #   zoonomia_HARs_20210402.1500bp == 1 ~ 'HAR1500bp',
+    #   zoonomia_CHARs_20210416.1500bp == 1 ~ 'CHAR1500bp',
+    #   TRUE ~ 'Other'), 
+    # HAR_group = factor(HAR_group, HAR_lvls))
+    # 
   ####################################
   ## save table of fine-mapped SNPs ##
   poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
@@ -151,12 +151,12 @@ height_ppt = 4; width_ppt = 8;
 height_fig = 1.75; width_fig = 2.25; font_fig = 7
 
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_20210521.ppt.pdf'))
+               paste0('polyfun_zoonomia_finemapping_20211111.ppt.pdf'))
 # pdf(plot_fn, height = height_ppt, width = width_ppt)
 # for (cutoff in c(.95, .9, .5, .25,0.01)){
-  for (cutoff in c(0.01)){
+  for (cutoff in c(0.75)){
     plot_fn = here(PROJDIR,'plots',
-  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20210521.ppt.pdf'))
+  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20211111.ppt.pdf'))
 pdf(plot_fn, height = height_ppt, width = width_ppt)
 
 pp = ggplot(data = snps_df %>% filter(PIP >= cutoff) , aes(x = group)) +
