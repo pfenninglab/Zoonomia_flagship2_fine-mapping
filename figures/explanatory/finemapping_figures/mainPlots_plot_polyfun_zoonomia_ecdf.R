@@ -11,11 +11,12 @@ library(RColorBrewer)
 library(ggpubr)
 library(wesanderson)
 library(tidymodels); tidymodels_prefer()
+library(rmeta)
 
 ####################################
 ## read in table of fine-mapped SNPs ##
 PROJDIR='figures/explanatory/finemapping_figures'
-i_am(file.path(PROJDIR, 'step3_plot_polyfun_zoonomia_ecdf.R'))
+i_am(file.path(PROJDIR, 'mainPlots_plot_polyfun_zoonomia_ecdf.R'))
 
 
 ##############################
@@ -45,17 +46,31 @@ names(ENCODE3_cCRE_cols) = ENCODE3_cCRE_lvls
 poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
 snps_df = readRDS(file = poly_fn)
 snps_df = snps_df %>% 
-  mutate(inPhyloP = case_when(grepl('Con', top_phyloP) ~ 'PhyloP_Cons.Mam', 
+  mutate(group = ifelse(group == 'baselineLF2.2.UKB', 'baseline-LF',
+                        ifelse( group =='base + ZooAnnot + cCRE', 'baseline-LF+Zoonomia',as.character(group))),
+         group = factor(group, c('non-functional', 'ZoonomiaAnnot', 'baseline-LF', 'baseline-LF+Zoonomia')), 
+          inPhyloP = case_when(grepl('Con', top_phyloP) ~ 'Constrained in mammals', 
                               grepl('Acc', top_phyloP) ~ 'PhyloP_Acc.Mam',
-                              TRUE ~ 'Not in PhyloP'),
-         inPhyloP = relevel(factor(inPhyloP), ref = 'Not in PhyloP'),
-         inPhastCons = case_when(grepl('Con', top_phastCons) ~ 'PhastCons.Prim', 
-                                 TRUE ~ 'Not in PhastCons'),
-         inPhastCons = relevel(factor(inPhastCons), ref = 'Not in PhastCons'),
+                              TRUE ~ 'Not constrained'),
+         inPhyloP = relevel(factor(inPhyloP), ref = 'Not constrained'),
+         inPhastCons = case_when(grepl('Con', top_phastCons) ~ 'Constrained in primates', 
+                                 TRUE ~ 'Not constrained'),
+         inPhastCons = relevel(factor(inPhastCons), ref = 'Not constrained'),
          cCRE_group = relevel(cCRE_group, ref = 'Other'))
 
 table(snps_df$group)
+group_col = c("#A5AA99", "#52BCA3", "#E58606", "#5D69B1")
+names(group_col) = levels(snps_df$group)
+group_col = group_col[-2]
 
+snps_df %>% filter(!duplicated(TRAIT)) %>%
+  select(N.y, Neff) %>% summary(na.rm = T)
+
+snps_df %>% filter(!duplicated(TRAIT)) %>%
+  select(N.y, Neff) %>% summarise_all(mean)
+
+snps_df %>% filter(!duplicated(TRAIT)) %>%
+  select(N.y, Neff) %>% summarise_all(~sd(.x)/sqrt(n()))
 
 ##########################################################
 ## 1. make the main ECDF plots showing PIP improvements ##
@@ -64,13 +79,13 @@ height_fig = 1.75; width_fig = 2.25; font_fig = 7
 height_ppt = 4; width_ppt = 8;
 
 ## ecdf for phyloP annotations
-pp1 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot'),
+pp1 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot', inPhyloP != 'PhyloP_Acc.Mam'),
              aes(x = PIP, color = group)) + 
   stat_ecdf(geom = "step", pad = FALSE) + 
   facet_grid(~inPhyloP, scales = 'free_y') + 
   ylab('CDF Proportion') + ylim(c(.8, NA)) + 
-  scale_colour_carto_d(palette = "Vivid") +
-  theme_classic(base_size = font_fig ) + 
+  scale_colour_manual(values = group_col) +
+  theme_classic(base_size = font_fig -1 ) + 
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   theme(legend.key.size = unit(.25, 'cm'), legend.position = 'bottom',
         legend.margin=margin(0,0,0,0), legend.box.margin=margin(0,0,0,0),
@@ -83,8 +98,8 @@ pp2 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot'),
   stat_ecdf(geom = "step", pad = FALSE) + 
   facet_grid(~inPhastCons, scales = 'free_y') + 
   ylab('CDF Proportion') + ylim(c(.8, NA)) + 
-  scale_colour_carto_d(palette = "Vivid") +
-  theme_classic(base_size = font_fig ) + 
+  scale_colour_manual(values = group_col) +
+  theme_classic(base_size = font_fig -1) + 
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   theme(legend.key.size = unit(.25, 'cm'), legend.position = 'bottom',
         legend.margin=margin(0,0,0,0), legend.box.margin=margin(0,0,0,0),
@@ -97,7 +112,7 @@ pp3 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot'),
   stat_ecdf(geom = "step", pad = FALSE) + 
   facet_grid(~cCRE_group, scales = 'free_y') + 
   ylab('CDF Proportion') + ylim(c(.8, NA)) + 
-  scale_colour_carto_d(palette = "Vivid") +
+  scale_colour_manual(values = group_col) +
   theme_classic(base_size = font_fig ) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(legend.key.size = unit(.25, 'cm'), legend.position = 'bottom',
@@ -107,11 +122,11 @@ pp3 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot'),
 
 ## put the eCDF panels together
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_ecdf_20210724.fig.pdf'))
-pdf(plot_fn, height = 4, width = width_fig, onefile = F)
-pp = ggarrange(pp1, pp2, pp3, 
-          font.label = list(size = font_fig + 4, color = "black", face = "bold"),
-          common.legend = TRUE, legend = 'top', ncol = 1, nrow = 3)
+               paste0('polyfun_zoonomia_finemapping_ecdf_20211025.fig.pdf'))
+pdf(plot_fn, height = 2.5, width = width_fig, onefile = F)
+pp = ggarrange(pp1, pp2,
+               font.label = list(size = font_fig+2, color = "black", face = "bold"),
+               common.legend = TRUE, legend = 'top', ncol = 1, nrow = 2)
 print(pp)
 dev.off()
 
@@ -125,33 +140,55 @@ ksTests = snps_df %>% filter(grepl('base', group)) %>%
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
-  mutate(FDR = p.adjust(p.value, 'fdr')) %>%
+  # mutate(group = 'All_SNPs') %>% 
+  relocate(group, .after = TRAIT) %>%
   arrange(p.value)
 
 ksTests2 = snps_df %>% filter(grepl('base', group)) %>%
-  nest(data = -c(TRAIT, inPhyloP)) %>%
+  nest(data = -c(inPhyloP)) %>%
   mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
                                    y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
-  mutate(FDR = p.adjust(p.value, 'fdr')) %>%
+  rename(`group` = `inPhyloP`) %>%
+  # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
   arrange(p.value)
 
 ksTests3 = snps_df %>% filter(grepl('base', group)) %>%
-  nest(data = -c(TRAIT, inPhastCons)) %>%
+  nest(data = -c(inPhastCons)) %>%
   mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
                                    y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
-  mutate(FDR = p.adjust(p.value, 'fdr')) %>%
+  rename(`group` = `inPhastCons`) %>%
+  # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
+  arrange(p.value)
+
+ksTests4 = snps_df %>% filter(grepl('base', group)) %>%
+  nest(data = -c(cCRE_group)) %>%
+  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
+                                   y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
+                                   alternative = 'greater')),
+         tidied = map(fit, tidy)) %>% 
+  unnest(tidied) %>%  select(-data, -fit) %>% 
+  rename(`group` = `cCRE_group`) %>%
+  # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
   arrange(p.value)
 
 ksTests %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTrait.results.xlsx'))
 ksTests2 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhyloP.results.xlsx'))
 ksTests3 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhastCons.results.xlsx'))
 
+rbind( ksTests2, ksTests3, ksTests4)%>% 
+  mutate(p.bonferroni = p.adjust(p.value, 'bonferroni'),
+         signif.sign = case_when(
+           p.bonferroni < 0.0001 ~ '***',
+           p.bonferroni < 0.001 ~ '**',
+           p.bonferroni < 0.01 ~ '*',
+           TRUE~ 'NS' )) %>%
+  writexl::write_xlsx( here(PROJDIR,'tables', 'Table_BNP2-1_ksTest.results.PIP.byAnnotations.xlsx'))
 
 ###########################################
 ## 3. count table of SNPs in categories ###
@@ -183,12 +220,12 @@ datList = list(dat1, )
 
 ###################################
 ## plot of number of SNPs more ###
-label_cols = c('PhyloP_Cons.Mam' = "darkblue", 'PhyloP_Acc.Mam' = 'darkred', 
+label_cols = c('Constrained' = "darkblue", 'PhyloP_Acc.Mam' = 'darkred', 
                'PhastCons.Prim' = 'lightgreen', 'PLS' = 'bisque', 
                'pELS' = 'purple', 'dELS' = 'coral')
 
 pp1 = ggplot(dat1 %>% select(-freq) %>% spread(group, num) %>% 
-               filter(inPhyloP != 'Not in PhyloP'), 
+               filter(inPhyloP != 'Not constrained'), 
        aes(x =  `baselineLF2.2.UKB`, y =  `base + ZooAnnot + cCRE`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(color = inPhyloP)) + 
@@ -237,7 +274,7 @@ pp3 = ggplot(dat3 %>% select(-freq) %>% spread(group, num) %>%
 ##################################################
 ## plot of perentage of SNPs finemapped better ###
 pp4 = ggplot(dat4 %>% select(-num) %>% spread(group, freq) %>% 
-               filter(inPhyloP != 'Not in PhyloP'), 
+               filter(inPhyloP != 'Not constrained'), 
              aes(x =  100 * (`baselineLF2.2.UKB` - `non-functional`) / `non-functional`,
                  y =  100 * (`base + ZooAnnot + cCRE` -  `non-functional`)  / `non-functional`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
