@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --partition=gpu
-#SBATCH --time 2:00:00
+#SBATCH --partition=gpu,pool1
+#SBATCH --time 12:00:00
 ##SBATCH --dependency=afterok:1606173
 #SBATCH --job-name=split_jobs
 #SBATCH --mem=10G
 #SBATCH --error=logs/polyfun_funct_Zoonomia_annot_baselineLF2_%A_%a.txt
 #SBATCH --output=logs/polyfun_funct_Zoonomia_annot_baselineLF2_%A_%a.txt
-#SBATCH --array=1-8
+#SBATCH --array=1-34
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
@@ -18,7 +18,11 @@ cd $CODEDIR;
 source ~/.bashrc; conda activate polyfun
 
 # for SLURM_ARRAY_TASK_ID in {12..15}; do
+if [[ $SLURM_ARRAY_TASK_ID -lt 27 ]]; then
 PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
+else
+PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Gazal_2022"
+fi
 N=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8
 

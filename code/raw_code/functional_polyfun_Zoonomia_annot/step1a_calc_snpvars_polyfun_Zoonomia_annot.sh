@@ -5,7 +5,7 @@
 #SBATCH --mem=95G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=1-24%3
+#SBATCH --array=1-34%3
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
@@ -19,7 +19,11 @@ cd $CODEDIR;
 
 source ~/.bashrc; conda activate polyfun
 
+if [[ $SLURM_ARRAY_TASK_ID -lt 27 ]]; then
 PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
+else
+PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Gazal_2022"
+fi
 N=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8
 
@@ -34,7 +38,7 @@ mkdir -p $OUTDIR $DATADIR $CACHEDIR
 # 2. Run PolyFun with L2-regularized S-LDSC, using LF2.2.UKB
 if [ ! -f ${OUTDIR}/${PREFIX}.22.bins.parquet ]; then
 python ${POLYFUNDIR}/polyfun.py --compute-h2-L2 --allow-missing \
---ref-ld-chr ${ZOONOMIADIR}/Zoonomia_annot. \
+--ref-ld-chr ${ZOONOMIADIR}/Zoonomia_annot/Zoonomia_annot. \
 --w-ld-chr ${ANNOTDIR}/weights.UKB. \
 --output-prefix ${OUTDIR}/$PREFIX --sumstats $SUMSTATS
 fi

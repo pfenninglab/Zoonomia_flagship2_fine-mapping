@@ -2,11 +2,11 @@
 #SBATCH --partition=pfen1,pfen_bigmem
 #SBATCH --time 1-0:00:00
 #SBATCH --job-name=Bsnpvars
-#SBATCH --dependency=afterok:1565504,1523919
+#SBATCH --dependency=afterok:2632078
 #SBATCH --mem=45G
 #SBATCH --error=logs/calc_snpvars_%A_%a.txt
 #SBATCH --output=logs/calc_snpvars_%A_%a.txt
-#SBATCH --array=9-24%3
+#SBATCH --array=1-34%3
 
 SETWD='/projects/pfenninggroup/machineLearningForComputationalBiology/zoonomia_finemapping'
 CACHEDIR=/projects/pfenninggroup/machineLearningForComputationalBiology/gwasEnrichments/polyfun/LD_cache
@@ -19,7 +19,11 @@ POLYFUNDIR='/home/bnphan/src/polyfun'
 cd $CODEDIR; 
 source ~/.bashrc; conda activate polyfun
 
+if [[ $SLURM_ARRAY_TASK_ID -lt 27 ]]; then
 PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Loh_2018"
+else
+PREFIX=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $2}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)"-Gazal_2022"
+fi
 N=$(awk -F'\t' -v IND=${SLURM_ARRAY_TASK_ID} 'FNR == IND + 1 {print $4}' ${SETWD}/data/tidy_data/tables/readme_ukbb_gwas.tsv)
 CUTOFF=5e-8
 
