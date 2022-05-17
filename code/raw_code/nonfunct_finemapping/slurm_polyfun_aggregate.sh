@@ -47,7 +47,7 @@ OUT=$(echo $FILE | sed 's/polyfun_all/top_annot/g')
 COL=$(zcat $PIPSNPS | awk -v col=CHR 'NR==1{for(i=1;i<=NF;i++) {if($i==col) {print i ;exit}} }')
 zcat $PIPSNPS | awk  -v COL=$COL -v VAR=${CHR} '{if( NR == 1 || $COL == VAR ) print }' | gzip > $FILE
 python ${POLYFUNDIR}/extract_annotations.py \
---annot ${ANNOTDIR}/Zoonomia_annot/Zoonomia_annot.${CHR}.annot.parquet \
+--annot ${ANNOTDIR}/Zoonomia_annot_baselineLF2/Zoonomia_annot_baselineLF2.${CHR}.annot.parquet \
 --pips $FILE --pip-cutoff $PIP_CUTOFF --out $OUT
 rm $FILE; 
 # fi;

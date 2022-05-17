@@ -175,14 +175,14 @@ snps_df = snps_df %>% mutate(
 
 ####################################
 ## save table of fine-mapped SNPs ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
 saveRDS(snps_df, file = poly_fn)
 
 snps_df2 = snps_df %>% filter(group =='base + ZooAnnot + cCRE') 
 snps_dfList = snps_df2 %>% split(snps_df2$FILE)
 
 snps_tsv = here('data/tidy_data/polyfun/tables/',
-                paste0('polyfun_finemapped_snps.',names(snps_dfList),'.20210520.txt.gz'))
+                paste0('polyfun_finemapped_snps.',names(snps_dfList),'.20220517.txt.gz'))
 tmp = map2(.x = snps_dfList, .y = snps_tsv, ~ write_tsv(.x, file= .y))
 
 #########################################################
@@ -240,10 +240,10 @@ with(overLapsHAR %>% mutate(TRAIT = droplevels(TRAIT)), table(TRAIT, group))
 ## output the HAR/CHAR overlapped SNPs
 dir.create(here(DATADIR, 'tables'), showWarnings = F)
 har_tsv = here(DATADIR, 'tables',
-               'polyfun_UKBB_finemapped_snps_overlap_HAR_CHAR_20210521.tsv')
+               'polyfun_UKBB_finemapped_snps_overlap_HAR_CHAR_20220517.tsv')
 write_tsv(overLapsHAR, file = har_tsv)
 
 dir.create(here(DATADIR, 'rdas'), showWarnings = F)
 har_rds = here(DATADIR, 'rdas',
-               'polyfun_UKBB_finemapped_snps_overlap_HAR_CHAR_20210521.rds')
+               'polyfun_UKBB_finemapped_snps_overlap_HAR_CHAR_20220517.rds')
 saveRDS(overLapsHAR, file = har_rds)
