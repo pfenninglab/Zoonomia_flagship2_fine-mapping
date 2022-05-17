@@ -4,3 +4,4 @@
 *.parquet
 *aggregate.txt.gz
 *.gz
+data/
