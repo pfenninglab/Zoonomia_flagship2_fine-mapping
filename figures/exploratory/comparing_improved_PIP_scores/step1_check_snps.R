@@ -14,9 +14,8 @@ i_am(file.path(PROJDIR, 'step1_check_snps.R'))
 
 ########################################
 ## read in the fine-mapping dataframe ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
 snps_df = readRDS(file = poly_fn)
-
 
 
 snps_df %>% filter(SNP == 'rs76488452', TRAIT== 'BMI') %>% pull(P)
@@ -44,24 +43,24 @@ snps_df %>% filter(PIP > 0.95, group != 'ZoonomiaAnnot') %>%
   summarise(ConsInX = sum(Zoonomia_phyloPcons.241mam.fdr.05==1), X = n(),
             PercentConsFineMapped = ConsInX/X * 100 )
 # group                  ConsInX     X PercentConsFineMapped
-# 1 non-functional             598  2048                  29.2
-# 2 baselineLF2.2.UKB          833  2486                  33.5
-# 3 base + ZooAnnot + cCRE     913  2542                  35.9
-
+# <fct>                    <int> <int>                 <dbl>
+# 1 non-functional             655  2238                  29.3
+# 2 baselineLF2.2.UKB          917  2717                  33.8
+# 3 base + ZooAnnot + cCRE    1029  2824                  36.4
 
 snps_df %>% filter(PIP > 0.75, group != 'ZoonomiaAnnot') %>%
   group_by(group) %>% 
   summarise(ConsInX = sum(Zoonomia_phyloPcons.241mam.fdr.05==1), X = n(),
             PercentConsFineMapped = ConsInX/X * 100 )
 # group                  ConsInX     X PercentConsFineMapped
-# 1 non-functional             732  2988                  24.5
-# 2 baselineLF2.2.UKB         1216  4099                  29.7
-# 3 base + ZooAnnot + cCRE    1407  4289                  32.8
+# 1 non-functional             823  3318                  24.8
+# 2 baselineLF2.2.UKB         1350  4497                  30.0
+# 3 base + ZooAnnot + cCRE    1586  4792                  33.1
 
 
-table_out_fn = here(PROJDIR, 'table_fine-mapping_perTrait_3Models_2021.11.11.xlsx')
+table_out_fn = here(PROJDIR, 'table_fine-mapping_perTrait_3Models_20220517.xlsx')
 snps_df %>% filter(PIP > 0.75, group != 'ZoonomiaAnnot') %>%
-  rename('N' = 'N.y') %>%
+  dplyr::rename('N' = 'N.y') %>%
   group_by(group, TRAIT, N, Neff) %>% 
   summarise(numSNP_PIP_gt_0.75 = n(),
             numConservedSNP = sum(Zoonomia_phyloPcons.241mam.fdr.05==1), 
@@ -76,9 +75,9 @@ snps_df %>% filter(PIP > 0.5, group != 'ZoonomiaAnnot') %>%
             PercentConsFineMapped = ConsInX/X * 100 )
 
 # group                  ConsInX     X PercentConsFineMapped
-# 1 non-functional             916  4564                  20.1
-# 2 baselineLF2.2.UKB         1681  6624                  25.4
-# 3 base + ZooAnnot + cCRE    1986  6891                  28.8
+# 1 non-functional            1031  5068                  20.3
+# 2 baselineLF2.2.UKB         1869  7338                  25.5
+# 3 base + ZooAnnot + cCRE    2256  7745                  29.1
 
 
 

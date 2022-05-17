@@ -15,7 +15,7 @@ i_am(file.path(PROJDIR, 'step2_check_UNICORNs_overlap.R'))
 
 ########################################
 ## read in the fine-mapping dataframe ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
 snps_df = readRDS(file = poly_fn)
 
 ######################
@@ -36,7 +36,7 @@ snps_df2 = snps_df[subjectHits(oo), ] %>%
   mutate(tmp = sum(PIP)) %>% ungroup() %>% 
   arrange(desc(tmp)) %>% select(-tmp) 
 
-snps_df2 %>% writexl::write_xlsx(file.path(PROJDIR, 'tables', 'UNICORN_subset_polyfun_finemapped_snps_zoonomia_20210520.xlsx'))
+snps_df2 %>% writexl::write_xlsx(file.path(PROJDIR, 'tables', 'UNICORN_subset_polyfun_finemapped_snps_zoonomia_20220517.xlsx'))
 snps_df2 %>% pull(PIP) %>% mean() #0.1503051
 snps_df2 %>% group_by(TRAIT) %>% summarize(score = mean(PIP)) %>% 
   pull(score) %>% summary()
@@ -90,7 +90,7 @@ snps_df4 %>% nest(data = -c(TRAIT)) %>%
   dplyr::select(-c(tmp, data)) %>% 
   as.data.frame() %>% 
   writexl::write_xlsx(file.path(PROJDIR, 'tables', 
-                                'UNICORN_vs._nonConstrain_PIP_diffTest_byTrait.xlsx'))
+                                'UNICORN_vs._nonConstrain_PIP_diffTest_byTrait_20220517.xlsx'))
 
 
 
