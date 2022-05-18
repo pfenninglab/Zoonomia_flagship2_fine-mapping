@@ -43,7 +43,7 @@ names(ENCODE3_cCRE_cols) = ENCODE3_cCRE_lvls
 
 ########################################
 ## read in the fine-mapping dataframe ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
 snps_df = readRDS(file = poly_fn)
 snps_df = snps_df %>% 
   mutate(inPhyloP = case_when(grepl('Con', top_phyloP) ~ 'PhyloP_Cons.Mam', 

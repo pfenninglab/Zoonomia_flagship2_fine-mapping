@@ -43,11 +43,11 @@ names(ENCODE3_cCRE_cols) = ENCODE3_cCRE_lvls
 
 ########################################
 ## read in the fine-mapping dataframe ##
-poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
-snps_df = readRDS(file = poly_fn)
+poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
+snps_df = readRDS(file = poly_fn) %>% mutate(TRAIT = droplevels(TRAIT))
 snps_df = snps_df %>% 
-  mutate(group = ifelse(group == 'baselineLF2.2.UKB', 'baseline-LF',
-                        ifelse( group =='base + ZooAnnot + cCRE', 'baseline-LF+Zoonomia',as.character(group))),
+  mutate(group = ifelse(group == 'baseline-LF', 'baseline-LF',
+                        ifelse( group =='baseline-LF+Zoonomia', 'baseline-LF+Zoonomia',as.character(group))),
          group = factor(group, c('non-functional', 'ZoonomiaAnnot', 'baseline-LF', 'baseline-LF+Zoonomia')), 
           inPhyloP = case_when(grepl('Con', top_phyloP) ~ 'Constrained in mammals', 
                               grepl('Acc', top_phyloP) ~ 'PhyloP_Acc.Mam',
@@ -122,7 +122,7 @@ pp3 = ggplot(snps_df %>% filter(group != 'ZoonomiaAnnot'),
 
 ## put the eCDF panels together
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_ecdf_20211025.fig.pdf'))
+               paste0('polyfun_zoonomia_finemapping_ecdf_20220518.fig.pdf'))
 pdf(plot_fn, height = 2.5, width = width_fig, onefile = F)
 pp = ggarrange(pp1, pp2,
                font.label = list(size = font_fig+2, color = "black", face = "bold"),
@@ -135,19 +135,19 @@ dev.off()
 ## ecdf KS tests ##
 ksTests = snps_df %>% filter(grepl('base', group)) %>%
   nest(data = -c(TRAIT)) %>%
-  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
-                                   y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
+  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baseline-LF') %>% pull(PIP), 
+                                   y = .x %>% filter(group == 'baseline-LF+Zoonomia') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
   # mutate(group = 'All_SNPs') %>% 
-  relocate(group, .after = TRAIT) %>%
   arrange(p.value)
+
 
 ksTests2 = snps_df %>% filter(grepl('base', group)) %>%
   nest(data = -c(inPhyloP)) %>%
-  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
-                                   y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
+  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baseline-LF') %>% pull(PIP), 
+                                   y = .x %>% filter(group == 'baseline-LF+Zoonomia') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
@@ -155,10 +155,11 @@ ksTests2 = snps_df %>% filter(grepl('base', group)) %>%
   # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
   arrange(p.value)
 
+
 ksTests3 = snps_df %>% filter(grepl('base', group)) %>%
   nest(data = -c(inPhastCons)) %>%
-  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
-                                   y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
+  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baseline-LF') %>% pull(PIP), 
+                                   y = .x %>% filter(group == 'baseline-LF+Zoonomia') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>%  
@@ -166,10 +167,11 @@ ksTests3 = snps_df %>% filter(grepl('base', group)) %>%
   # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
   arrange(p.value)
 
+
 ksTests4 = snps_df %>% filter(grepl('base', group)) %>%
   nest(data = -c(cCRE_group)) %>%
-  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baselineLF2.2.UKB') %>% pull(PIP), 
-                                   y = .x %>% filter(group == 'base + ZooAnnot + cCRE') %>% pull(PIP), 
+  mutate(fit = map(data, ~ ks.test(x = .x %>% filter(group == 'baseline-LF') %>% pull(PIP), 
+                                   y = .x %>% filter(group == 'baseline-LF+Zoonomia') %>% pull(PIP), 
                                    alternative = 'greater')),
          tidied = map(fit, tidy)) %>% 
   unnest(tidied) %>%  select(-data, -fit) %>% 
@@ -177,9 +179,9 @@ ksTests4 = snps_df %>% filter(grepl('base', group)) %>%
   # mutate(FDR = p.adjust(p.value, 'fdr')) %>%
   arrange(p.value)
 
-ksTests %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTrait.results.xlsx'))
-ksTests2 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhyloP.results.xlsx'))
-ksTests3 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhastCons.results.xlsx'))
+ksTests %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTrait.results_20220518.xlsx'))
+ksTests2 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhyloP.results_20220518.xlsx'))
+ksTests3 %>% writexl::write_xlsx( here(PROJDIR,'tables', 'ksTest.PIP.byTraitAndPhastCons.results_20220518.xlsx'))
 
 rbind( ksTests2, ksTests3, ksTests4)%>% 
   mutate(p.bonferroni = p.adjust(p.value, 'bonferroni'),
@@ -188,7 +190,8 @@ rbind( ksTests2, ksTests3, ksTests4)%>%
            p.bonferroni < 0.001 ~ '**',
            p.bonferroni < 0.01 ~ '*',
            TRUE~ 'NS' )) %>%
-  writexl::write_xlsx( here(PROJDIR,'tables', 'Table_BNP2-1_ksTest.results.PIP.byAnnotations.xlsx'))
+  writexl::write_xlsx( here(PROJDIR,'tables', 'Table_BNP2-1_ksTest.results.PIP.byAnnotations_20220518.xlsx'))
+
 
 ###########################################
 ## 3. count table of SNPs in categories ###
@@ -216,7 +219,7 @@ dat6 = snps_df %>%
   count(TRAIT, cCRE_group, group,  name = 'num') %>%
   group_by(group) %>% mutate(freq = 100 * num/sum(num))
 
-datList = list(dat1, )
+
 
 ###################################
 ## plot of number of SNPs more ###
@@ -226,7 +229,7 @@ label_cols = c('Constrained' = "darkblue", 'PhyloP_Acc.Mam' = 'darkred',
 
 pp1 = ggplot(dat1 %>% select(-freq) %>% spread(group, num) %>% 
                filter(inPhyloP != 'Not constrained'), 
-       aes(x =  `baselineLF2.2.UKB`, y =  `base + ZooAnnot + cCRE`)) + 
+       aes(x =  `baseline-LF`, y =  `baseline-LF+Zoonomia`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(color = inPhyloP)) + 
   theme_classic(base_size = font_fig ) + 
@@ -243,7 +246,7 @@ pp1 = ggplot(dat1 %>% select(-freq) %>% spread(group, num) %>%
 
 pp2 = ggplot(dat2 %>% select(-freq) %>% spread(group, num) %>% 
                filter(inPhastCons != 'Not in PhastCons'), 
-             aes(x =  `baselineLF2.2.UKB`, y =  `base + ZooAnnot + cCRE`)) + 
+             aes(x =  `baseline-LF`, y =  `baseline-LF+Zoonomia`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(colour = 'PhastCons.Prim')) + 
   theme_classic(base_size = font_fig ) + 
@@ -258,7 +261,7 @@ pp2 = ggplot(dat2 %>% select(-freq) %>% spread(group, num) %>%
 
 pp3 = ggplot(dat3 %>% select(-freq) %>% spread(group, num) %>% 
                filter(cCRE_group != 'Other'), 
-             aes(x =  `baselineLF2.2.UKB`, y =  `base + ZooAnnot + cCRE`)) + 
+             aes(x =  `baseline-LF`, y =  `baseline-LF+Zoonomia`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(color = cCRE_group)) + 
   theme_classic(base_size = font_fig ) + 
@@ -275,8 +278,8 @@ pp3 = ggplot(dat3 %>% select(-freq) %>% spread(group, num) %>%
 ## plot of perentage of SNPs finemapped better ###
 pp4 = ggplot(dat4 %>% select(-num) %>% spread(group, freq) %>% 
                filter(inPhyloP != 'Not constrained'), 
-             aes(x =  100 * (`baselineLF2.2.UKB` - `non-functional`) / `non-functional`,
-                 y =  100 * (`base + ZooAnnot + cCRE` -  `non-functional`)  / `non-functional`)) + 
+             aes(x =  100 * (`baseline-LF` - `non-functional`) / `non-functional`,
+                 y =  100 * (`baseline-LF+Zoonomia` -  `non-functional`)  / `non-functional`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(color = inPhyloP)) + 
   theme_classic(base_size = font_fig ) + 
@@ -292,8 +295,8 @@ pp4 = ggplot(dat4 %>% select(-num) %>% spread(group, freq) %>%
 
 pp5 = ggplot(dat5 %>% select(-num) %>% spread(group, freq) %>% 
                filter(inPhastCons != 'Not in PhastCons'), 
-             aes(x =  100 * (`baselineLF2.2.UKB` - `non-functional`) / `non-functional`,
-                 y =  100 * (`base + ZooAnnot + cCRE` -  `non-functional`)  / `non-functional`)) + 
+             aes(x =  100 * (`baseline-LF` - `non-functional`) / `non-functional`,
+                 y =  100 * (`baseline-LF+Zoonomia` -  `non-functional`)  / `non-functional`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16 , aes(colour = 'PhastCons.Prim')) + 
   theme_classic(base_size = font_fig ) + 
@@ -307,8 +310,8 @@ pp5 = ggplot(dat5 %>% select(-num) %>% spread(group, freq) %>%
 
 pp6 = ggplot(dat6 %>% select(-num) %>% spread(group, freq) %>% 
                filter(cCRE_group != 'Other'), 
-             aes(x =  100 * (`baselineLF2.2.UKB` - `non-functional`) / `non-functional`,
-                 y =  100 * (`base + ZooAnnot + cCRE` -  `non-functional`)  / `non-functional`)) + 
+             aes(x =  100 * (`baseline-LF` - `non-functional`) / `non-functional`,
+                 y =  100 * (`baseline-LF+Zoonomia` -  `non-functional`)  / `non-functional`)) + 
   geom_abline(intercept = 0, slope = 1, linetype = 'dashed', color = 'red') + 
   geom_point(pch = 16, aes(color = cCRE_group)) + 
   theme_classic(base_size = font_fig ) + 
@@ -321,7 +324,7 @@ pp6 = ggplot(dat6 %>% select(-num) %>% spread(group, freq) %>%
 
 # put together the plot panels, gain in fine-mapped SNPs
 plot_fn3 = here(PROJDIR,'plots',
-                paste0('polyfun_zoonomia_finemapping_baseVsCombine_20210724.fig.pdf'))
+                paste0('polyfun_zoonomia_finemapping_baseVsCombine_20220518.fig.pdf'))
 pdf(plot_fn3, height = 4, width = 3.5, onefile = F)
 
 pa = ggarrange(pp1,pp4, legend = 'bottom', ncol = 2, nrow = 1, 
