@@ -108,11 +108,11 @@ if(FALSE){
     # 
   ####################################
   ## save table of fine-mapped SNPs ##
-  poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+  poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
   saveRDS(snps_df2, file = poly_fn)
   snps_df = snps_df2
 } else{
-  poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20210520.rds')
+  poly_fn = here('data/tidy_data/polyfun/polyfun_finemapped_snps_zoonomia_20220517.rds')
   snps_df = readRDS(file = poly_fn)
 }
 
@@ -147,16 +147,15 @@ names(HAR_cols) = HAR_lvls
 #################################
 ## make plots for presentation ##
 dir.create(here(file.path(PROJDIR, 'plots')), showWarnings = F)
-height_ppt = 4; width_ppt = 8;
+height_ppt = 5; width_ppt = 8;
 height_fig = 1.75; width_fig = 2.25; font_fig = 7
 
 plot_fn = here(PROJDIR,'plots',
-               paste0('polyfun_zoonomia_finemapping_20211111.ppt.pdf'))
+               paste0('polyfun_zoonomia_finemapping_20220517.ppt.pdf'))
 # pdf(plot_fn, height = height_ppt, width = width_ppt)
-# for (cutoff in c(.95, .9, .5, .25,0.01)){
-  for (cutoff in c(0.75)){
+for (cutoff in c(.95, .9,0.75, .5, .25,0.01)){
     plot_fn = here(PROJDIR,'plots',
-  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20211111.ppt.pdf'))
+  paste0('polyfun_zoonomia_finemapping_PIP',cutoff,'_20220517.ppt.pdf'))
 pdf(plot_fn, height = height_ppt, width = width_ppt)
 
 pp = ggplot(data = snps_df %>% filter(PIP >= cutoff) , aes(x = group)) +
